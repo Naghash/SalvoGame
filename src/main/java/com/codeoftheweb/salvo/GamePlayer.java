@@ -1,14 +1,10 @@
 package com.codeoftheweb.salvo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.GenericGenerator;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+
+import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.Date;
+import java.util.*;
 
 @Entity
 public class GamePlayer {
@@ -19,23 +15,28 @@ public class GamePlayer {
 
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name="player_id")
+    @JoinColumn(name="player")
     private Player player;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name="game_id")
+    @JoinColumn(name="game")
     private Game game;
+
+
+    @OneToMany(mappedBy="gamePlayer", fetch=FetchType.EAGER)
+    private Set <Ship> ships = new HashSet<>();
+
     private LocalDateTime joinDate;
 
     public GamePlayer() {}
 
-    public GamePlayer(LocalDateTime joinDate, Game game, Player player ){
+    public GamePlayer(LocalDateTime joinDate, Game game, Player player){
         this.joinDate = joinDate;
         this.game = game;
         this.player = player;
-
     }
 
+    @JsonIgnore
     public Game getGame() {
         return game;
     }
@@ -46,8 +47,13 @@ public class GamePlayer {
     public void setPlayer(Player player) {
         this.player = player;
     }
+
     public void setGame(Game game) {
-        this.game = game;
+        this.game =  game;
+    }
+
+    public Set<Ship> getShips() {
+        return ships;
     }
 
     public long getId() {
@@ -55,6 +61,18 @@ public class GamePlayer {
         return id;
     }
 
+    public Map<String, Object> toDTO(){
+        return new LinkedHashMap<String, Object>(){{
+            put("id", id);
+            put("player", player.toDTO());
+            put("ships", ships);
+        }};
+    }
+
+    public void addShip(Ship ship){
+        ship.addGP(this);
+        ships.add(ship);
+    }
     public void setId(long id) {
         this.id = id;
     }
